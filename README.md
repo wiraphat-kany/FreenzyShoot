@@ -64,10 +64,6 @@
 - มีระบบ HP + HP Bar ของศัตรู และตายเมื่อเลือดหมด
 - มี **Wall HP** — กำแพงที่ต้องยิงทำลาย
 
-### 🗝️ Key & Gate
-- เก็บ **Key Item** ที่ซ่อนอยู่ตามด่าน (นับใน `GameVariable._keyCount`)
-- ต้องเก็บกุญแจให้ครบ **4 ดอก** ประตู (`Gate`) ถึงจะเปิดผ่านไปได้
-
 ### ⚠️ Trap
 - กับดักที่ทำให้เลือดลด (`Trap` — ลด HP 15 ต่อครั้ง)
 - กับดักแบบร่วงหล่น (`TrapFall`)
@@ -75,7 +71,12 @@
 ### 🚪 Scene / Level Flow
 - `DoorToNextLevel` — เดินชนประตูแล้วโหลดซีนถัดไปอัตโนมัติ
 - `CheckReSpawn` — จุดเกิดใหม่เมื่อผู้เล่นตาย
-- `Camerafollow` / `CameraMove` — กล้องเลื่อนตามผู้เล่น
+- `Camerafollow` — กล้องเลื่อนตามผู้เล่น (ใช้ Cinemachine ร่วมด้วย)
+
+### 🚧 ฟีเจอร์ที่ยังไม่เสร็จ
+ระบบ **กุญแจ–ประตู** (เก็บกุญแจ 4 ดอกเพื่อเปิดประตู) เขียนโค้ดไว้ครบแล้ว
+แต่ยังไม่ได้แปะเข้ากับ object ใน scene จึงยังไม่ทำงานในเกม
+โค้ดอยู่ที่ `Assets/_Unused/KeySystem/` พร้อมวิธีต่อให้ใช้งานได้
 
 ---
 
@@ -106,17 +107,27 @@ FreenzyShoot/
 │   │   ├── Select Mission/     # หน้าเลือกภารกิจ
 │   │   └── Seleced Character/  # หน้าเลือกตัวละคร
 │   │
-│   ├── Scripts/                # โค้ดหลักของเกม
-│   │   ├── Character/          # PlayerAttack, Shooting
-│   │   ├── Enemy/              # Enemies, FollowPlayer, WallHp
-│   │   ├── Weapon system/      # Gun, Magazine, PickupWeapon, DropWeapon
-│   │   ├── Key/                # KeyItem, Gate, GameVariable
+│   ├── Script/                 # ⚠️ โค้ดหลักของตัวละคร (ใช้งานหนักที่สุด)
+│   │   ├── Player.cs           #    ตัวผู้เล่น — ใช้ใน 12 scene
+│   │   ├── HpBar.cs            #    หลอดเลือด — ใช้ใน 15 scene
+│   │   ├── Bullet.cs           #    กระสุน
+│   │   ├── Enemy.cs            #    ศัตรู
+│   │   ├── GameManager.cs      #    ตัวคุมเกม
+│   │   ├── PlayerManager.cs
+│   │   └── Spawner.cs
+│   │
+│   ├── Scripts/                # โค้ดระบบรอบ ๆ เกม
+│   │   ├── Character/          # Shooting (ระบบยิง + ammo)
+│   │   ├── Enemy/              # FollowPlayer
+│   │   ├── Weapon system/      # Magazine, PickupWeapon, DropWeapon
 │   │   ├── Trap/               # Trap, TrapFall
 │   │   ├── Hp/                 # HpBarEnemy, HpPotion
-│   │   ├── Scene/              # Level, Mainmenu, DoorToNextLevel, CheckReSpawn
-│   │   └── GamePlay/           # Ladder
+│   │   ├── Scene/              # Level, DoorToNextLevel, CheckReSpawn
+│   │   ├── GamePlay/           # Ladder
+│   │   ├── Camerafollow.cs
+│   │   └── SkillPlayerBlue/Green/Brown.cs
 │   │
-│   ├── Script/                 # สคริปต์ชุดเก่า (Player, Bullet, Enemy, GameManager)
+│   ├── _Unused/                # สคริปต์ที่ไม่มี scene ไหนเรียกใช้ (ดู README ข้างใน)
 │   │
 │   ├── Pixel Adventure 1/      # Asset ตัวละคร + tileset
 │   ├── Sunnyland/              # Asset ฉาก
@@ -128,7 +139,40 @@ FreenzyShoot/
 └── FreenzyShoot.sln            # Solution file สำหรับ IDE
 ```
 
-> **หมายเหตุ:** มีโฟลเดอร์สคริปต์ 2 ชุดคือ `Assets/Script/` (ชุดเก่า) และ `Assets/Scripts/` (ชุดที่ใช้จริง) — ชุดเก่ายังเหลือไว้อยู่เพราะบางซีนยังอ้างถึง
+> ⚠️ **จุดที่ต้องระวัง:** มีโฟลเดอร์สคริปต์ 2 ชุดชื่อคล้ายกันมาก คือ **`Script/`** (ไม่มี s)
+> และ **`Scripts/`** (มี s) — **ใช้งานจริงทั้งคู่ ไม่ใช่ของเก่า/ของใหม่**
+>
+> `Script/` คือหัวใจของเกม (Player, HpBar, Bullet, Enemy) ส่วน `Scripts/` เป็นระบบรอบ ๆ
+> เวลาแก้โค้ดให้ดูให้ดีว่าอยู่โฟลเดอร์ไหน
+>
+> ยังไม่ได้รวมเป็นชุดเดียวเพราะไฟล์เหล่านี้ถูกอ้างถึงในหลายสิบ scene
+> ถ้าจะรวมในอนาคต **ให้ทำผ่าน Unity Editor** (ลากใน Project window) อย่าย้ายจาก File Explorer
+
+---
+
+## การทำงานร่วมกัน (Git)
+
+โปรเจคนี้ใช้ git แล้ว โดยมี `.gitignore` ที่ตัดโฟลเดอร์ที่ Unity สร้างเองออก
+(`Library/` ขนาด ~1.7 GB, `obj/`, `Logs/`, `UserSettings/`, ไฟล์ IDE)
+โฟลเดอร์พวกนี้ **ไม่ต้อง commit** เพราะ Unity สร้างใหม่ได้เองตอนเปิดโปรเจค
+
+### ข้อควรระวังเวลาทำงานกับเพื่อน ⚠️
+
+1. **ห้ามลบ `.meta`** — Unity ใช้ไฟล์นี้จำว่า script ไหนแปะอยู่กับ object ไหน
+   ถ้า `.meta` หาย scene จะขึ้น *"Missing script"* ทันที
+2. **ย้าย/เปลี่ยนชื่อไฟล์ ให้ทำใน Unity Editor เสมอ** — ถ้าย้ายจาก File Explorer
+   ต้องย้าย `.cs` กับ `.cs.meta` ไปด้วยกันเสมอ
+3. **scene ไฟล์ merge ยาก** — พยายามอย่าให้สองคนแก้ scene เดียวกันพร้อมกัน
+   ตกลงกันก่อนว่าใครทำด่านไหน
+
+### คำสั่งพื้นฐาน
+
+```bash
+git status                  # ดูว่าแก้อะไรไปบ้าง
+git add -A                  # เตรียม commit
+git commit -m "ข้อความ"      # บันทึก
+git log --oneline           # ดูประวัติ
+```
 
 ---
 
